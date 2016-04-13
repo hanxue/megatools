@@ -50,7 +50,7 @@ void http_set_progress_callback(http* h, http_progress_fn cb, gpointer data);
 
 GString* http_post(http* h, const gchar* url, const gchar* body, gssize body_len, GError** err);
 GString* http_post_stream_upload(http* h, const gchar* url, goffset len, http_data_fn read_cb, gpointer user_data, GError** err);
-gboolean http_post_stream_download(http* h, const gchar* url, http_data_fn write_cb, gpointer user_data, GError** err);
+gboolean http_post_stream_download(http* h, const gchar* url, http_data_fn write_cb, gpointer user_data, GError** err, goffset resume_from);
 
 void http_free(http* h);
 

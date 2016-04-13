@@ -3395,6 +3395,8 @@ gboolean mega_session_dl(mega_session* s, const gchar* handle, const gchar* key,
   memset(&data, 0, sizeof(data));
   data.s = s;
 
+  goffset resume_from = 0;
+
   if (local_path)
   {
     // get dir and filename to download to
@@ -3509,7 +3511,11 @@ gboolean mega_session_dl(mega_session* s, const gchar* handle, const gchar* key,
   if (local_path)
   {
     // open local file for writing
-    data.stream = stream = g_file_create(file, 0, NULL, &local_err);
+    if(g_file_query_exists(file, NULL)) {
+      GFileInfo *info = g_file_query_info(file, G_FILE_ATTRIBUTE_STANDARD_SIZE, G_FILE_QUERY_INFO_NONE, NULL, NULL);
+      resume_from = g_file_info_get_size(info);
+    }
+    data.stream = stream = g_file_append_to(file, resume_from, NULL, &local_err);
     if (!data.stream)
     {
       gc_free gchar* tmp = g_file_get_path(file);
@@ -3531,7 +3537,7 @@ gboolean mega_session_dl(mega_session* s, const gchar* handle, const gchar* key,
   // perform download
   h = http_new();
   http_set_progress_callback(h, (http_progress_fn)progress_generic, s);
-  if (!http_post_stream_download(h, url, (http_data_fn)dl_process_data, &data, &local_err))
+  if (!http_post_stream_download(h, url, (http_data_fn)dl_process_data, &data, &local_err, resume_from))
   {
     g_propagate_prefixed_error(err, local_err, "Data download failed: ");
     goto err;
